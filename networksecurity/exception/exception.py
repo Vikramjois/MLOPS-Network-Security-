@@ -1,7 +1,7 @@
 import sys
 from networksecurity.logging import logger
 
-class NetworkSecurityException(Exception):
+class NetworkSecurityException(Exception): #used Excetion here so that we can use raise and except block
     def __init__(self,error_message,error_details:sys):
         self.error_message = error_message #save raw error
         _,_,exc_tb = error_details.exc_info() #dig out traceback
@@ -20,4 +20,4 @@ if __name__=='__main__':
         a=1/0
         print("This will not be printed",a)
     except Exception as e:
-           raise NetworkSecurityException(e,sys)
+           raise NetworkSecurityException(e,sys) # e = error message, sys = error details

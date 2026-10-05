@@ -1,0 +1,8 @@
+python-dotenv #used to callout environment variables
+pandas
+numpy
+certifi
+pymongo[srv] 
+pymongo
+## pip install --upgrade "pymongo[srv]"
+-e .
