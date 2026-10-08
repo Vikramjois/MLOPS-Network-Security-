@@ -9,6 +9,8 @@ import os
 
 from networksecurity.constants import training_pipeline
 
+print(training_pipeline.PIPELINE_NAME)   # NetworkSecurity
+print(training_pipeline.ARTIFACT_DIR)    # Artifacts
 
 class TrainingPipelineConfig:
     '''Main config for a run. Every run gets its own timestamped folder under Artifacts/.'''

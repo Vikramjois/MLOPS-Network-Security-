@@ -6,5 +6,7 @@ pymongo[srv]
 pymongo
 ## pip install --upgrade "pymongo[srv]"
 scikit-learn
+pyaml
+dill
 
 -e .
