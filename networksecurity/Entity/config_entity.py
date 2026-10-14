@@ -9,8 +9,10 @@ import os
 
 from networksecurity.constants import training_pipeline
 
+# quick check that constants import correctly, prints on every import (safe to remove)
 print(training_pipeline.PIPELINE_NAME)   # NetworkSecurity
 print(training_pipeline.ARTIFACT_DIR)    # Artifacts
+
 
 class TrainingPipelineConfig:
     '''Main config for a run. Every run gets its own timestamped folder under Artifacts/.'''
@@ -22,7 +24,7 @@ class TrainingPipelineConfig:
 
         self.pipeline_name: str = training_pipeline.PIPELINE_NAME
         self.artifact_name: str = training_pipeline.ARTIFACT_DIR
-        self.artifact_dir: str = os.path.join(self.artifact_name, timestamp)
+        self.artifact_dir: str = os.path.join(self.artifact_name, timestamp)  # e.g. Artifacts/10_08_2026_17_32_20
         self.model_dir: str = os.path.join("final_model")  # final model used for prediction
         self.timestamp: str = timestamp
 
@@ -40,6 +42,7 @@ class DataIngestionConfig:
             self.data_ingestion_dir, training_pipeline.DATA_INGESTION_FEATURE_STORE_DIR, training_pipeline.FILE_NAME
         )
 
+        # train/test split output
         self.training_file_path: str = os.path.join(
             self.data_ingestion_dir, training_pipeline.DATA_INGESTION_INGESTED_DIR, training_pipeline.TRAIN_FILE_NAME
         )
@@ -47,7 +50,7 @@ class DataIngestionConfig:
             self.data_ingestion_dir, training_pipeline.DATA_INGESTION_INGESTED_DIR, training_pipeline.TEST_FILE_NAME
         )
 
-        self.train_test_split_ratio: float = training_pipeline.DATA_INGESTION_TRAIN_TEST_SPLIT_RATION
+        self.train_test_split_ratio: float = training_pipeline.DATA_INGESTION_TRAIN_TEST_SPLIT_RATION  # 0.2 = 20% test
         self.collection_name: str = training_pipeline.DATA_INGESTION_COLLECTION_NAME
         self.database_name: str = training_pipeline.DATA_INGESTION_DATABASE_NAME
 
@@ -67,6 +70,7 @@ class DataValidationConfig:
         self.invalid_train_file_path: str = os.path.join(self.invalid_data_dir, training_pipeline.TRAIN_FILE_NAME)
         self.invalid_test_file_path: str = os.path.join(self.invalid_data_dir, training_pipeline.TEST_FILE_NAME)
 
+        # KS test results per column
         self.drift_report_file_path: str = os.path.join(
             self.data_validation_dir,
             training_pipeline.DATA_VALIDATION_DRIFT_REPORT_DIR,
@@ -109,6 +113,7 @@ class ModelTrainerConfig:
         self.model_trainer_dir: str = os.path.join(
             training_pipeline_config.artifact_dir, training_pipeline.MODEL_TRAINER_DIR_NAME
         )
+        # NetworkModel (preprocessor + best model) saved here
         self.trained_model_file_path: str = os.path.join(
             self.model_trainer_dir, training_pipeline.MODEL_TRAINER_TRAINED_MODEL_DIR, training_pipeline.MODEL_FILE_NAME
         )
