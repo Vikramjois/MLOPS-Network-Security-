@@ -1,7 +1,7 @@
 '''
 Model trainer component.
 Loads transformed arrays, tunes and compares several classifiers,
-logs scores to MLflow, and saves the best one (with the preprocessor) as model.pkl.
+logs scores to MLflow (DagsHub), and saves the best one (with the preprocessor) as model.pkl.
 '''
 
 import os
@@ -28,6 +28,20 @@ from sklearn.ensemble import (
     RandomForestClassifier,
 )
 import mlflow  # experiment tracking: logs metrics and models for each run
+from urllib.parse import urlparse  # used to check if tracking is remote (https) or local (file)
+
+from dotenv import load_dotenv
+load_dotenv()  # reads the MLflow/DagsHub settings below from .env
+
+# MLflow reads these 3 variables automatically, so no browser login is needed
+
+os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI")
+os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
+os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
+
+# not needed when the 3 variables above are set, and it triggers the browser login
+# import dagshub
+# dagshub.init(repo_owner='Vikramjois', repo_name='MLOPS-Network-Security-', mlflow=True)
 
 
 class ModelTrainer:
@@ -42,17 +56,26 @@ class ModelTrainer:
             raise NetworkSecurityException(e, sys)
 
     def track_mlflow(self, best_model, classificationmetric):
-        '''Log F1, precision, recall and the model to MLflow as one run.'''
-        with mlflow.start_run():
-            f1_score = classificationmetric.f1_score
-            precision_score = classificationmetric.precision_score
-            recall_score = classificationmetric.recall_score
+        '''Log F1, precision, recall and the model to MLflow (DagsHub) as one run.'''
+        mlflow.set_registry_uri(os.getenv("MLFLOW_TRACKING_URI"))  # register models on the same DagsHub server
+        tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme  # "https" for DagsHub, "file" for local
 
-            mlflow.log_metric("f1_score", f1_score)
-            mlflow.log_metric("precision", precision_score)
-            mlflow.log_metric("recall_score", recall_score)
-            mlflow.sklearn.log_model(best_model, name="model", serialization_format="cloudpickle")
-            #Model registry does not work with the local file store
+        with mlflow.start_run():
+            mlflow.log_metric("f1_score", classificationmetric.f1_score)
+            mlflow.log_metric("precision", classificationmetric.precision_score)
+            mlflow.log_metric("recall_score", classificationmetric.recall_score)
+
+            if tracking_url_type_store != "file":
+                # remote server (DagsHub): log the model and register it under a name
+                mlflow.sklearn.log_model(
+                    best_model,
+                    name="model",
+                    registered_model_name="NetworkSecurityModel",  # must be a string, not the model object
+                    serialization_format="cloudpickle",  # avoids the skops untrusted-type error
+                )
+            else:
+                # local file store: model registry not supported, just log the model
+                mlflow.sklearn.log_model(best_model, name="model", serialization_format="cloudpickle")
 
     def train_model(self, X_train, y_train, x_test, y_test):
         '''Compare models, pick the best by test score, log metrics, save model, return artifact.'''
@@ -104,7 +127,7 @@ class ModelTrainer:
         ]
         best_model = models[best_model_name]  # already fitted with best params inside evaluate_models
 
-        # train metrics + log to mlflow
+        # train metrics + log to mlflow (first run)
         y_train_pred = best_model.predict(X_train)
         classification_train_metric = get_classification_score(y_true=y_train, y_pred=y_train_pred)
         self.track_mlflow(best_model, classification_train_metric)
@@ -120,11 +143,12 @@ class ModelTrainer:
         model_dir_path = os.path.dirname(self.model_trainer_config.trained_model_file_path)
         os.makedirs(model_dir_path, exist_ok=True)
 
-        # wrap preprocessor + model into one object and save as model.pkl
+        # wrap preprocessor + model into one object and save in this run's Artifacts folder
         Network_Model = NetworkModel(preprocessor=preprocessor, model=best_model)
         save_object(self.model_trainer_config.trained_model_file_path, obj=Network_Model)  # save the instance, not the class
-        # #model pusher
-        # save_object("final_model/model.pkl",best_model)
+
+        # model pusher: copy of the bare model used by app.py for prediction
+        save_object("final_model/model.pkl", best_model)
 
         model_trainer_artifact = ModelTrainerArtifact(
             trained_model_file_path=self.model_trainer_config.trained_model_file_path,
