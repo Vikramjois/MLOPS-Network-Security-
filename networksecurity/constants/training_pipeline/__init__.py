@@ -70,4 +70,4 @@ MODEL_TRAINER_TRAINED_MODEL_NAME: str = "model.pkl"
 MODEL_TRAINER_EXPECTED_SCORE: float = 0.6  # minimum score, below this the model is rejected
 MODEL_TRAINER_OVER_FIITING_UNDER_FITTING_THRESHOLD: float = 0.05  # max allowed train vs test score gap
 
-TRAINING_BUCKET_NAME = "netwworksecurity"  # cloud (S3) bucket for syncing artifacts later
+TRAINING_BUCKET_NAME = "vikram-networksecurity-2026"  # cloud (S3) bucket for syncing artifacts later
