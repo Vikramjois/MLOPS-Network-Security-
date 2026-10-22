@@ -35,14 +35,14 @@ load_dotenv()  # reads the MLflow/DagsHub settings below from .env
 
 # MLflow reads these 3 variables automatically, so no browser login is needed
 
-os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI")
-os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
+# os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI")
+# os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
+# os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
 
 # only set MLflow variables if they exist (they're missing inside Docker unless passed with -e)
-# for key in ["MLFLOW_TRACKING_URI", "MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD"]:
-#     if os.getenv(key):
-#         os.environ[key] = os.getenv(key)
+for key in ["MLFLOW_TRACKING_URI", "MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD"]:
+    if os.getenv(key):
+        os.environ[key] = os.getenv(key)
 
 # not needed when the 3 variables above are set, and it triggers the browser login
 # import dagshub
